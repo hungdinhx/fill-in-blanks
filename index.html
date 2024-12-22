@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fill-in-the-Blanks Game</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #f9f9f9;
+      margin: 0;
+      padding: 0;
+    }
+
+    .game-container {
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    .paragraph {
+      font-size: 18px;
+      margin: 20px 0;
+      line-height: 2; /* Double spacing for readability */
+      text-align: left;
+    }
+
+    .blank {
+      display: inline-block;
+      width: 120px;
+      height: 24px;
+      border-bottom: 2px solid #333;
+      text-align: center;
+      font-size: 16px;
+      color: #555;
+      vertical-align: middle;
+      cursor: pointer;
+    }
+
+    .marked {
+      color: #f44336;
+      font-weight: bold;
+    }
+
+    .vocabulary-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin: 20px 0;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+
+    .controls {
+      margin-top: 20px;
+    }
+
+    #feedback {
+      margin-top: 10px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Fill-in-the-Blanks Game</h1>
+  <div class="game-container">
+    <div id="paragraph" class="paragraph"></div>
+    <div class="vocabulary-buttons" id="vocabulary-buttons"></div>
+    <div class="controls">
+      <button id="check-answer">Check Answer</button>
+      <button id="next-round">Next Round</button>
+    </div>
+    <div id="feedback"></div>
+  </div>
+
+  <script>
+    const rounds = [
+      {
+        part: "To speak briefly of the five <span class='blank' data-answer='elements'></span>, they originate as a single flow of <span class='blank' data-answer='energy'></span>, following the <span class='blank' data-answer='principles'></span> of <span class='blank' data-answer='heaven'></span>, circulating harmoniously in an <span class='blank' data-answer='integrated'></span> and <span class='blank' data-answer='balanced'></span> manner.",
+        vocabulary: ["elements", "energy", "principles", "heaven", "integrated", "balanced"]
+      },
+      {
+        part: "Yet, common human <span class='blank' data-answer='dispositions'></span> tend to be skewed, leading the five elements toward <span class='blank' data-answer='yin'></span>. When this happens, the <span class='blank' data-answer='toxic energies'></span> of <span class='blank' data-answer='anger'></span>, <span class='blank' data-answer='hatred'></span>, <span class='blank' data-answer='resentment'></span>, <span class='blank' data-answer='frustration'></span>, and <span class='blank' data-answer='annoyance'></span> dominate.",
+        vocabulary: ["dispositions", "yin", "toxic energies", "anger", "hatred", "resentment", "frustration", "annoyance"]
+      },
+      {
+        part: "No wonder <span class='blank' data-answer='illness'></span> arises. From the perspective of the five elements, the East is associated with the <span class='blank' data-answer='wood'></span> element, governs the <span class='blank' data-answer='liver'></span>, which stores the <span class='blank' data-answer='soul'></span> and represents one’s original nature.",
+        vocabulary: ["illness", "wood", "liver", "soul"]
+      },
+      {
+        part: "Its innate quality is <span class='blank' data-answer='benevolence'></span>, which is the root of <span class='blank' data-answer='virtue'></span>. In the five elements, it corresponds to the role of a laborer, and in human relationships, it corresponds to the position of the eldest son.",
+        vocabulary: ["benevolence", "virtue"]
+      },
+      {
+        part: "The disposition of someone with a “yin wood” nature often inclines toward <span class='blank' data-answer='anger'></span>. Such individuals are stubborn, unyielding, and unwilling to admit fault.",
+        vocabulary: ["anger"]
+      }
+    ];
+
+    let currentRound = 0;
+    let filledAnswers = [];
+
+    const paragraphContainer = document.getElementById("paragraph");
+    const vocabularyButtonsContainer = document.getElementById("vocabulary-buttons");
+    const feedback = document.getElementById("feedback");
+
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
+
+    function loadRound() {
+      const round = rounds[currentRound];
+      paragraphContainer.innerHTML = round.part;
+      filledAnswers = Array(document.querySelectorAll(".blank").length).fill(null);
+
+      const shuffledVocabulary = [...round.vocabulary];
+      shuffleArray(shuffledVocabulary);
+
+      vocabularyButtonsContainer.innerHTML = "";
+      shuffledVocabulary.forEach((word, index) => {
+        const button = document.createElement("button");
+        button.textContent = word;
+        button.dataset.index = index;
+        button.onclick = () => fillBlank(word, button);
+        vocabularyButtonsContainer.appendChild(button);
+      });
+
+      feedback.textContent = "";
+    }
+
+    function fillBlank(word, button) {
+      const blanks = document.querySelectorAll(".blank");
+      const nextBlankIndex = filledAnswers.findIndex(answer => answer === null);
+      if (nextBlankIndex !== -1) {
+        blanks[nextBlankIndex].textContent = word;
+        blanks[nextBlankIndex].dataset.word = word;
+        blanks[nextBlankIndex].onclick = () => unclickBlank(nextBlankIndex, button);
+        filledAnswers[nextBlankIndex] = word;
+        button.disabled = true;
+      }
+    }
+
+    function unclickBlank(blankIndex, button) {
+      const blanks = document.querySelectorAll(".blank");
+      const blank = blanks[blankIndex];
+      const word = blank.dataset.word;
+      if (word) {
+        blank.textContent = "";
+        blank.dataset.word = "";
+        blank.onclick = null;
+        filledAnswers[blankIndex] = null;
+        button.disabled = false;
+      }
+    }
+
+    function checkAnswers() {
+      const blanks = document.querySelectorAll(".blank");
+      let allCorrect = true;
+
+      blanks.forEach((blank, index) => {
+        const correctAnswer = blank.getAttribute("data-answer");
+        const userAnswer = filledAnswers[index];
+
+        const possibleAnswers = correctAnswer.split(/,|and/).map(ans => ans.trim());
+        const isCorrect = possibleAnswers.includes(userAnswer);
+
+        if (!isCorrect) {
+          allCorrect = false;
+          blank.textContent = `*${userAnswer || "___"}*`;
+          blank.classList.add("marked");
+        } else {
+          blank.textContent = userAnswer;
+          blank.classList.remove("marked");
+        }
+      });
+
+      feedback.textContent = allCorrect
+        ? "🎉 All correct! Great job!"
+        : "❌ Some answers are incorrect. Try again!";
+      feedback.style.color = allCorrect ? "#4caf50" : "#f44336";
+    }
+
+    function nextRound() {
+      if (currentRound < rounds.length - 1) {
+        currentRound++;
+        loadRound();
+      } else {
+        feedback.textContent = "🎉 You've completed all rounds!";
+        feedback.style.color = "#4caf50";
+      }
+    }
+
+    document.getElementById("check-answer").onclick = checkAnswers;
+    document.getElementById("next-round").onclick = nextRound;
+
+    shuffleArray(rounds);  // Shuffle the rounds
+    loadRound();
+  </script>
+</body>
+</html>
